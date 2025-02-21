@@ -48,7 +48,6 @@
         var teclado;
         var fogo;
         var plataforma;
-        var plataforma2;
         var moeda;
         var placar;
         var pontuacao = 0;
@@ -72,22 +71,28 @@
             alien = this.physics.add.sprite(larguraJogo/2, 0, 'alien');
             alien.setCollideWorldBounds(true); // ativar os "limites físicos" das bordas da tela do jogo
             alien.body.setSize(120, 100, true); // editar a região que está sendo considerada como corpo físico, true serve para centralizar a região ao "corpo" da imagem
-        
+
             teclado = this.input.keyboard.createCursorKeys(); // para acessar as setas do teclado e atribuir suas propriedades
 
-            plataforma = this.physics.add.staticImage(larguraJogo/2, alturaJogo/2, 'tijolo'); // adiciona uma plataforma ao jogo
-            this.physics.add.collider(alien, plataforma); // colisão entre dois objetos
+    let plataformas = [ // criar lista de plataformas
+        { x: larguraJogo / 2, y: alturaJogo / 2 },
+        { x: larguraJogo / 4, y: alturaJogo / 4 },
+    ];
 
-            plataforma2 = this.physics.add.staticImage(larguraJogo/4, alturaJogo/4, 'tijolo'); // adiciona uma plataforma ao jogo
-            this.physics.add.collider(alien, plataforma2); // colisão entre dois objetos
+    // Criar plataformas dinamicamente
+    this.plataformasGrupo = this.physics.add.staticGroup();
+    plataformas.forEach(pos => {
+        let plat = this.plataformasGrupo.create(pos.x, pos.y, 'tijolo');
+    });
+
+    this.physics.add.collider(alien, this.plataformasGrupo); // colisão
 
             // moeda
             var posicaoMoeda_X = Phaser.Math.RND.between(50,650); // sorteia um número
             moeda = this.physics.add.sprite(posicaoMoeda_X, 0, 'moeda'); // sprite que se afeta pela física do jogo
             moeda.setCollideWorldBounds(true); // limites físicos do jogo
             moeda.setBounce(0.7); // movimento de quicar a moeda
-            this.physics.add.collider(moeda, plataforma); // colisão entre dois objetos
-            this.physics.add.collider(moeda, plataforma2); // colisão entre dois objetos
+            this.physics.add.collider(moeda, this.plataformasGrupo);
 
             // placar
             placar = this.add.text(50, 50, 'Moedas:' + pontuacao, {fontSize:'45px', fill:'#495613'});
@@ -137,7 +142,6 @@
             fogo.setPosition(alien.x, alien.y + alien.height/2); // coordena o foguinho de acordo com a posição do alien
 
         }
-
 
         //funções para controlar o fogo
         function ativarTurbo(){ // ativa o foguinho
