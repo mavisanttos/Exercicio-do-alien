@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <title>Exercício do Alien</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;  }
+    </style>
+</head>
+<body>
+    <script>
+        // são criadas constantes para a largura e a altura do jogo
+        const larguraJogo = 700;
+        const alturaJogo = 850;
+
+        // configurações da tela do jogo
+        const config = {
+            type: Phaser.AUTO, // o navegador escolhe automaticamente o tipo de renderizador da página web
+            width: larguraJogo, // largura da tela do jogo (700)
+            height: alturaJogo, // altura da tela do jogo (850)
+
+            physics: { // ativa a física do jogo
+                default: 'arcade', // define o sistema de física como 'arcade'
+	            arcade: { // configurações específicas para o sistema de física 'arcade'
+		            gravity: {y:300}, // define a gravidade no eixo y como 300
+                    debug: false // visualisar as informações de depuração (debug) relacionadas à física do jogo
+                }
+            },
+
+            scene: { // define as funções que serão executadas durante o ciclo de vida do jogo (preloud, create, update)
+                preload: preload,
+                create: create,
+                update: update
+            }
+        }
+
+        // uma constante game, guardando nela um "novo jogo phaser" que vai usar as configurações que definimos em "config"
+        const game = new Phaser.Game(config);
+        
+        var alien; // guarda o alien do jogo
+        var teclado;
+        var fogo;
+        var plataforma;
+        var plataforma2;
+        var moeda;
+        var placar;
+        var pontuacao = 0;
+
+        function preload() { // carrega as imagens do jogo
+            this.load.image('background', 'img/bg.png');
+            this.load.image('alien', 'img/alienigena.png');
+            this.load.image('moeda', 'img/moeda.png');
+            this.load.image('tijolo', 'img/tijolos.png');
+            this.load.image('fogo', 'img/turbo.png');
+   
+        }
+
+        function create() { // a ordem de colocação altera quem aparece por cima
+                            // adiciona e configura elementos do jogo, definindo sua largura, altura e "apelido" da imagem
+            this.add.image(larguraJogo/2, alturaJogo/2, 'background');
+
+            fogo = this.add.sprite (0, 0, 'fogo'); // adiciona o fogo
+            fogo.setVisible(false); // controla a visibilidade do fogo
+
+            alien = this.physics.add.sprite(larguraJogo/2, 0, 'alien');
+            alien.setCollideWorldBounds(true); // ativar os "limites físicos" das bordas da tela do jogo
+            alien.body.setSize(120, 100, true); // editar a região que está sendo considerada como corpo físico, true serve para centralizar a região ao "corpo" da imagem
+        
+            teclado = this.input.keyboard.createCursorKeys(); // para acessar as setas do teclado e atribuir suas propriedades
+
+            plataforma = this.physics.add.staticImage(larguraJogo/2, alturaJogo/2, 'tijolo'); // adiciona uma plataforma ao jogo
+            this.physics.add.collider(alien, plataforma); // colisão entre dois objetos
+
+            plataforma2 = this.physics.add.staticImage(larguraJogo/4, alturaJogo/4, 'tijolo'); // adiciona uma plataforma ao jogo
+            this.physics.add.collider(alien, plataforma2); // colisão entre dois objetos
+
+            // moeda
+            var posicaoMoeda_X = Phaser.Math.RND.between(50,650); // sorteia um número
+            moeda = this.physics.add.sprite(posicaoMoeda_X, 0, 'moeda'); // sprite que se afeta pela física do jogo
+            moeda.setCollideWorldBounds(true); // limites físicos do jogo
+            moeda.setBounce(0.7); // movimento de quicar a moeda
+            this.physics.add.collider(moeda, plataforma); // colisão entre dois objetos
+            this.physics.add.collider(moeda, plataforma2); // colisão entre dois objetos
+
+            // placar
+            placar = this.add.text(50, 50, 'Moedas:' + pontuacao, {fontSize:'45px', fill:'#495613'});
+
+            // quando o alien encontar na moeda
+            this.physics.add.overlap(alien, moeda, function(){
+                moeda.setVisible(false); // a moeda some
+
+                posicaoMoeda_X = Phaser.Math.RND.between(50,650); // sorteia um número
+                moeda.setPosition(posicaoMoeda_X, 0); // ajusta a posição da moeda
+
+                pontuacao +=1; // ganha 1 ponto
+                placar.setText('Moedas:' + pontuacao); // +1 no placar
+
+                moeda.setVisible(true); // nova moeda
+            });
+        }
+
+        function update() {
+
+            // se a seta para a esqueda estiver pressionada, o alien se move para a esquerda
+            if (teclado.left.isDown){
+                alien.setVelocityX(-150);
+            }
+
+            // se a seta para a direita estiver pressionada, o alien se move para a direita
+            else if (teclado.right.isDown){
+                alien.setVelocityX(150);
+            }
+
+            // se nenhuma das duas estiver pressionadas ele não se move no eixo x
+            else {
+                alien.setVelocityX(0);
+            }
+
+            // se a tecla para cima estiver pressionada o alien se move para cima
+            if (teclado.up.isDown){
+                alien.setVelocityY(-150);
+                ativarTurbo();
+            }
+ 
+            // se não, a gravidade atua no alien
+            else{
+                semTurbo();
+            }
+
+            fogo.setPosition(alien.x, alien.y + alien.height/2); // coordena o foguinho de acordo com a posição do alien
+
+        }
+
+
+        //funções para controlar o fogo
+        function ativarTurbo(){ // ativa o foguinho
+            fogo.setVisible (true);
+}
+
+        function semTurbo(){ // desativa o foguinho
+            fogo.setVisible (false);
+}
+
+    </script>
+</body>
+</html>
